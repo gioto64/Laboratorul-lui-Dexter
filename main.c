@@ -11,13 +11,12 @@ int check_alloc(void *p) {
     printf("Bad alloc\n");
     return 0;
   }
-
   return 1;
 }
 
 char* strip_blank(char *s) {
   int l = strlen(s);
-  char *new = (char *) malloc(l * sizeof(char));
+  char *new = (char *)malloc((l + 1) * sizeof(char));
   if (new == NULL) {
     free(s);
     return NULL; 
@@ -25,12 +24,11 @@ char* strip_blank(char *s) {
 
   int j = 0;
   for (int i = 0; i < l ; ++i) {
-    if (!isblank(s[i]))
-      new[++j] = s[i]; 
+    if (!isspace(s[i]))
+      new[j++] = s[i]; 
   }
-  new[++j] = 0;
+  new[j++] = 0;
 
-  free(s);
   return new;
 }
 
@@ -39,32 +37,47 @@ int main() {
   printf("Current version doesn't support expressions longer than 4096 characters\n");
 
   char *buff = (char *)malloc(BUFF_SIZE * sizeof(char));
-
   if (!check_alloc(buff))
     exit(1);
+
+  term_vector var;
+  var.sz = 0;
+  var.cap = 1;
+  var.vec = (term *)malloc(sizeof(term));
+  if (!check_alloc(var.vec)) {
+    free(buff);
+    exit(1);
+  }
 
   while (1) {
     printf("dexter:>");
     fgets(buff, BUFF_SIZE, stdin);
+    if (buff[0] == '\n')
+      fgets(buff, BUFF_SIZE, stdin);
 
-    buff = strip_blank(buff);
-    if (buff == NULL) {
-      exit(1); 
-    }
-  
-    if (strcmp(buff, "exit") == 0) {
+    char *buff_clean = strip_blank(buff);
+    if (buff_clean == NULL)
+      continue;
+
+    if (strcmp(buff_clean, "exit") == 0) {
       // exit the program
       free(buff);
+      free(buff_clean);
+      free_terms(var);
       return 0;
     }
 
     // parse an expression
-    int ok = parse_expr(buff);
+    int ok = parse_expr(buff_clean, &var);
     // only memory errors should be catched by ok
     if (!ok) {
       free(buff);
+      free(buff_clean);
+      free_terms(var);
       exit(1);
     }
+
+    free(buff_clean);
   }
 
   return 0;
