@@ -5,15 +5,36 @@
 #include <string.h>
 #include <stdlib.h>
 
-void parse_aritm(char *s, term_vector *var) {
-  static char delim[] = "*+-/ ";
+int max(int a, int b) {
+  if (a > b)
+    return a;
+  return b;
+}
+
+int parse_aritm(char *s, term_vector *var) {
+  static char delim[] = "*+- ";
+  char ch = -1;
+  int len = strlen(s);
+  for (int i = 0; i < len ; ++i) {
+    if (strchr(delim, s[i])) {
+      if (ch == -1) {
+        ch = *strchr(delim, s[i]);
+        continue;
+      }
+
+      printf("Invalid expression\n");
+      return 1;
+    }
+  }
+
   char *name1 = strtok(s, delim);
   char *name2 = strtok(NULL, delim); 
 
   if (name2 == NULL && name1 == NULL)
-    return;
+    return 1;
 
   if (name2 == NULL) {
+    // if there's only one term, output it
     term aux = find_name(name1, var);
     if (aux.type == 'M') {
       print_matrix(aux.data);
@@ -24,23 +45,112 @@ void parse_aritm(char *s, term_vector *var) {
       printf("No term found with the given name\n");
     }
 
-    return;
+    return 1;
+  } else {
+    term lft = find_name(name1, var); 
+    if (lft.type == 'N') {
+      printf("No term found with the given name\n");
+      return 1;
+    }
+
+    term rgt = find_name(name2, var); 
+    if (rgt.type == 'N') {
+      printf("No term found with the given name\n");
+      return 1;
+    }
+
+    if (lft.type != rgt.type)
+      printf("The terms have incompatible types\n");
+
+    if (lft.type == 'M') {
+      if (ch == '+') {
+        matrix *aux = init_matrix(((matrix *)lft.data)->n, ((matrix *)lft.data)->m, NULL);
+        if (aux == NULL)
+          return 0;
+
+        int ok = add_matrix(lft.data, rgt.data, aux, 1);
+        if (ok)
+          print_matrix(aux);
+
+        free_matrix(aux);
+      } else if (ch == '*'){
+        matrix *aux = init_matrix(((matrix *)lft.data)->n, ((matrix *)rgt.data)->m, NULL);
+        if (aux == NULL)
+          return 0;
+
+        int ok = mul_matrix(lft.data, rgt.data, aux);
+        if (ok)
+          print_matrix(aux);
+
+        free_matrix(aux);
+      } else if (ch == '-'){
+        matrix *aux = init_matrix(((matrix *)lft.data)->n, ((matrix *)lft.data)->m, NULL);
+        if (aux == NULL)
+          return 0;
+
+        int ok = add_matrix(lft.data, rgt.data, aux, -1);
+        if (ok)
+          print_matrix(aux);
+
+        free_matrix(aux);
+      }
+      else {
+        printf("Invalid expression\n");
+      }
+    } else {
+      if (ch == '+') {
+        poly *aux = init_poly(max(((poly *)lft.data)->n, ((poly *)rgt.data)->n), NULL);
+        if (aux == NULL)
+          return 0;
+
+        int ok = add_poly(lft.data, rgt.data, aux, 1);
+        if (ok)
+          print_poly(aux);
+
+        free_poly(aux);
+      } else if (ch == '*'){
+        poly *aux = init_poly(((poly *)lft.data)->n + ((poly *)rgt.data)->n, NULL);
+        if (aux == NULL)
+          return 0;
+
+        int ok = mul_poly(lft.data, rgt.data, aux);
+        if (ok)
+          print_poly(aux);
+
+        free_poly(aux);
+      } else if (ch == '-'){
+        poly *aux = init_poly(max(((poly *)lft.data)->n, ((poly *)rgt.data)->n), NULL);
+        if (aux == NULL)
+          return 0;
+
+        int ok = add_poly(lft.data, rgt.data, aux, -1);
+        if (ok)
+          print_poly(aux);
+
+        free_poly(aux);
+      } else {
+        printf("Invalid expression\n");
+      }
+    }
   }
+
+  return 1;
 }
 
 int parse_expr(char *s, term_vector *var) {
   // parses an expression
   // should report only if memory errors occur
-  // the convention is: return 1 - ok, return 0 - bad
+  // the convention is: return 1 -> ok, return 0 -> bad
   
   static const char *ip = "init_poly";
   static const char *im = "init_matrix";
   static char name[BUFF_SIZE];
   
   if (strcmp(s, ip) == 0) {
-    printf("Insert the name of the polynom: ");
+    // insert a polynomial
+    printf("Insert the name of the polynomial: ");
     scanf("%s", name);
-    printf("Insert the grade of the polynom: ");
+    printf("Insert the grade of the polynomial: ");
     int n;
     scanf("%d", &n);
     
@@ -56,6 +166,7 @@ int parse_expr(char *s, term_vector *var) {
     free(x);
     return ok;
   } else if (strcmp(s, im) == 0) {
+    // insert a matrix
     printf("Insert the name of the matrix: ");
     scanf("%s", name);
     printf("Insert the number of lines of the matrix: ");
@@ -76,10 +187,8 @@ int parse_expr(char *s, term_vector *var) {
     free(x);
     return ok;
   } else {
-    parse_aritm(s, var);
-    return 1;
+    return parse_aritm(s, var);
   }
 
   return 1; 
-
 }

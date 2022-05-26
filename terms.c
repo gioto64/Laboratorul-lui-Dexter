@@ -35,6 +35,7 @@ void free_terms(term_vector var) {
     else
       free_poly(var.vec[i].data);
   }
+  free(var.vec);
 }
 
 term find_name(char *name, term_vector *var) {

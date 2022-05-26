@@ -1,5 +1,20 @@
-main: main.c expr.c
-	gcc -DLOCAL_DEFINE -Wall -Wextra -Wshadow -Wunused -fsanitize=address,undefined,signed-integer-overflow -lm -g main.c expr.c terms.c matrix.c poly.c expr.h macros.h -o main
+CC=gcc
+CFLAGS=-I -Ofast.
+DEPS=main.c expr.h macros.h terms.h
+
+OBJ := expr.o
+OBJ += terms.o
+OBJ += matrix.o
+OBJ += poly.o
+
+%.o: %.c
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+dexter: $(OBJ) $(DEPS)
+	$(CC) -o $@ $^ $(CFLAGS)
+
+run: dexter
+	./dexter
 
 clean:
-	rm main
+	rm -f *.o dexter

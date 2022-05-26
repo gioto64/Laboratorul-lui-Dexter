@@ -15,8 +15,13 @@ void* init_poly(int n, double *x) {
     return NULL;
   }
 
-  for (int i = 0; i <= n ; ++i)
-    P->a[i] = x[i];
+  P->n = n;
+  for (int i = 0; i <= n ; ++i) {
+    if (!x)
+      P->a[i] = 0;
+    else
+      P->a[i] = x[i];
+  }
 
   return P;
 }
@@ -28,12 +33,37 @@ void free_poly(poly *P) {
 
 void print_poly(poly *P) {
   if (P == NULL) {
-    printf("No polygon found with the given name\n");
+    printf("No polynomial found with the given name\n");
     return;
   }
 
-  for (int i = 0; i <= P->n ; ++i)
-    printf("%lf ", P->a[i]);
+  for (int i = 0; i <= P->n ; ++i) {
+    printf("%lf", P->a[i]);
+    if (i > 0)
+      printf("*x^%d", i);
+    if (i < P->n)
+      printf(" + ");
+  }
   printf("\n");
 }
 
+int add_poly(poly *A, poly *B, poly *C, int sgn) {
+  for (int i = 0; i <= C->n ; ++i)
+    C->a[i] = 0;
+  for (int i = 0; i <= A->n ; ++i)
+    C->a[i] += A->a[i];
+  for (int i = 0; i <= B->n ; ++i)
+    C->a[i] += sgn * B->a[i];
+
+  return 1;
+}
+
+int mul_poly(poly *A, poly *B, poly *C) {
+  for (int i = 0; i < C->n ; ++i)
+    C->a[i] = 0;
+  for (int i = 0; i <= A->n ; ++i)
+    for (int j = 0; j <= B->n ; ++j)
+      C->a[i + j] += A->a[i] * B->a[j];
+
+  return 1;
+}

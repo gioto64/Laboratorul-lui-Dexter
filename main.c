@@ -34,7 +34,6 @@ char* strip_blank(char *s) {
 
 int main() {
   printf(KGRN "Dexter's Laboratory, version 1.0.0\n");
-  printf("Current version doesn't support expressions longer than 4096 characters\n");
 
   char *buff = (char *)malloc(BUFF_SIZE * sizeof(char));
   if (!check_alloc(buff))
