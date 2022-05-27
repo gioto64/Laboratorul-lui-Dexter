@@ -59,8 +59,10 @@ int parse_aritm(char *s, term_vector *var) {
       return 1;
     }
 
-    if (lft.type != rgt.type)
+    if (lft.type != rgt.type) {
       printf("The terms have incompatible types\n");
+      return 1;
+    }
 
     if (lft.type == 'M') {
       if (ch == '+') {
